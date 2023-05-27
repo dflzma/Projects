@@ -1,0 +1,51 @@
+---1. Importing required libraries---
+import pandas as pd
+import urllib
+from sqlalchemy import create_engine
+
+---2. Reading the data---
+df_datos = pd.read_csv('archive_name.csv', delimiter='insert_delimiter', low_memory=(if is too heavy the load then put 'false' otherwise don't use)
+#print(df_datos)
+
+---3. Manipulating the datatypes according to our necessity, it is important to have defined the same datatypes in the table's design in SQL, to ensure we don't have any trouble appending data---
+df_datos['Attribute1'] = df_datos['Attribute1'].astype(str)
+df_datos['Attribute2'] = df_datos['Attribute2'].astype(str)
+df_datos['Attribute3'] = df_datos['Attribute3'].astype(str)
+df_datos['Attribute4'] = df_datos['Attribute4'].astype(float)
+df_datos['Attribute5'] = df_datos['Attribute5'].astype(str)
+df_datos['Attribute6'] = df_datos['Attribute6'].astype(str)
+df_datos['Attribute7'] = df_datos['Attribute7'].astype(float)
+df_datos['Attribute8'] = df_datos['Attribute8'].astype(str)
+df_datos['Attribute9'] = df_datos['Attribute9'].astype(str)
+df_datos['Attribute10'] = df_datos['Attribute10'].astype(str)
+df_datos['Attribute11'] = df_datos['Attribute11'].astype(str)
+df_datos['Attribute12'] = df_datos['Attribute12'].astype(str)
+df_datos['Attribute13'] = df_datos['Attribute13'].astype(str)
+df_datos['Attribute14'] = df_datos['Attribute14'].astype(str)
+df_datos['Attribute15'] = df_datos['Attribute15'].astype(str)
+df_datos['Attribute16'] = df_datos['Attribute16'].astype(str)
+df_datos['Attribute17'] = df_datos['Attribute17'].astype(str)
+df_datos['Attribute18'] = df_datos['Attribute18'].astype(str)
+df_datos['Attribute19'] = df_datos['Attribute19'].astype(str)
+df_datos['Attribute20'] = df_datos['Attribute20'].astype(str)
+df_datos['Attribute21'] = df_datos['Attribute21'].astype(float)
+df_datos['Attribute22'] = df_datos['Attribute22'].astype(str)
+df_datos['Attribute23'] = df_datos['Attribute23'].astype(str)
+df_datos['Attribute24'] = df_datos['Attribute24'].astype(float)
+df_datos['Attribute25'] = df_datos['Attribute25'].astype(float)
+df_datos['Attribute26'] = df_datos['Attribute26'].astype(float)
+
+---4. Once we have the correct datatypes, we establish connection to SQL---
+params = urllib.parse.quote_plus(
+        'Driver={SQL Server};'
+        'Server=Name_server;'
+        'Database=Name_database;'
+        'Trusted_Connection=yes;')    
+
+engine = create_engine("mssql+pyodbc:///?odbc_connect=%s" % params)
+
+df_datos.to_sql('Name_table', engine,if_exists='append',index= False)
+#print(df_datos.dtypes)
+
+---5. Once the load is done print this message ---
+print('Finished')
