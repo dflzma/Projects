@@ -1,0 +1,121 @@
+#CARGA DE LIBRERIAS
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
+from sklearn.ensemble import RandomForestRegressor
+
+#CARGA DE DATOS
+df_train = pd.read_csv('Train_Data')
+df_test = pd.read_csv('Test_Data')
+
+#ANALISIS EXPLORATORIO DE LOS DATOS
+df_train.shape #Devuelve el # de filas y de columnas del dataframe.
+df_train.columns # Podemos ver los nombres de las columnas en el dataframe
+df_train.head(5) #Muestra las primeras n filas del dataframe
+df_train.describe() #Describe estadisticas descriptivas de cada una de las variables
+df_train.sort_values('tasa_crimen') #Ordena los valores de acuerdo a una columna especificada
+df_train.groupby(['edad']).mean() #podemos agrupar los valores, al usar la funcion mean() me devuelve el promedio
+df_train.groupby(['rio']).agg({'valor': 'mean', 'tasa_crimen': 'max', 'impuestos': 'mean'}) # Con la funcion Agg( podemos calcular varias metricas al tiempo)
+
+#GRAFICAS
+#1. Grafico de dispersión
+plt.scatter(df_train['tasa_crimen'], df_train['valor'])
+plt.title("Tasa de crimen vs precio")
+plt.xlabel("Crímenes per cápita")
+plt.ylabel("Precio ($)")
+plt.show()
+
+#2. Grafico de Dispersión PAIRPLOT
+#sns.pairplot(df_train, x_vars=['tasa_crimen', 'lz', 'industrial', 'rio'], y_vars=['valor'])
+#sns.pairplot(df_train, x_vars=['nox', 'cuartos', 'edad', 'distancia'], y_vars=['valor'])
+#sns.pairplot(df_train, x_vars=['autopistas', 'impuestos', 'profesores', 'status'], y_vars=['valor'])
+
+sns.pairplot(df_train, x_vars=['tasa_crimen', 'lz', 'industrial', 'rio'], y_vars=['valor'], kind="reg") # Agregar opción kind="reg" agrega una linea de regresión
+sns.pairplot(df_train, x_vars=['nox', 'cuartos', 'edad', 'distancia'], y_vars=['valor'], kind="reg")
+sns.pairplot(df_train, x_vars=['autopistas', 'impuestos', 'profesores', 'status'], y_vars=['valor'], kind="reg")
+
+#HEATMAP
+sns.heatmap(df_train.corr()) #Se debe ejecutar con plt.show()
+
+#HISTOGRAMAS
+sns.displot(df_train, x="status")
+ax = sns.displot(df_train, x="cuartos", legend=False)
+sns.displot(df_train, x="rio")
+sns.displot(df_train, x="impuestos")
+plt.show()
+
+#DIAGRAMAS DE CAJAS Y BIGOTES
+ax = sns.boxplot(x = df_train['rio'], y = df_train['valor'])
+ax.set_ylabel('Valor ($)')
+ax.set_ylabel('Rio')
+plt.show()
+
+sns.boxplot(x = df_train['autopistas'], y = df_train['valor'])
+plt.show()
+
+#REGRESION LINEAL UNIVARIADA
+linear_univ_mod = LinearRegression().fit(df_train[['status']], df_train[['valor']]) #La variable independiente va en el 1er parametro, la dependiente 2do.
+print("El intercepto de la regresión es {}. La pendiente de la regresión es {}.".format(round(linear_univ_mod.intercept_[0], 1), round(linear_univ_mod.coef_[0][0], 1))) 
+# coef: el coeficiente nos dice cuánto cambia la cosa que estamos midiendo cuando la otra cosa cambia
+#el intercepto nos dice cuánto vale la cosa que estamos midiendo cuando la otra cosa es igual a cero
+df_test[['predicted_linear_univ']] = pd.DataFrame(linear_univ_mod.predict(df_test[['status']])) # Recibe el dato de la variable independiente a la cual le va a aplicar la prediccion
+#df_test lo agrega en una nueva columna, este es el valor predicho
+# plt.scatter(df_test[['valor']], df_test[['predicted_linear_univ']])
+plt.plot(df_test[['valor']], df_test[['valor']])
+plt.title("Precio real vs predicho de viviendas")
+plt.xlabel("Precio real ($)")
+plt.ylabel("Precio predicho ($)") #ver video de regresion Univariada
+plt.show()
+
+RMSE = mean_squared_error(df_test[['valor']], df_test[['predicted_linear_univ']], squared=False)
+MAE = mean_absolute_error(df_test[['valor']], df_test[['predicted_linear_univ']]) # primer argumento valores reales, segundo valores predichos
+MAPE = mean_absolute_percentage_error(df_test[['valor']], df_test[['predicted_linear_univ']]) # primer argumento reales, 2do valores predichos
+print("RMSE = {}".format(round(RMSE, 2)))
+print("MAE = {}".format(round(MAE, 2)))
+print("MAPE = {}".format(round(MAPE, 2)))
+
+#REGRESION LINEAL CON TERMINO CUADRÁTICO
+df_train[['status_sq']] = df_train[['status']]*df_train[['status']]
+linear_univ_mod_quad = LinearRegression().fit(df_train[['status', 'status_sq']], df_train[['valor']])
+
+df_test[['status_sq']] = df_test[['status']]*df_test[['status']]
+df_test[['predicted_linear_univ_sq']] = pd.DataFrame(linear_univ_mod_quad.predict(df_test[['status', 'status_sq']]))
+
+RMSE = mean_squared_error(df_test[['valor']], df_test[['predicted_linear_univ_sq']], squared=False)
+MAE = mean_absolute_error(df_test[['valor']], df_test[['predicted_linear_univ_sq']])
+MAPE = mean_absolute_percentage_error(df_test[['valor']], df_test[['predicted_linear_univ_sq']])
+print("RMSE = {}".format(round(RMSE, 2)))
+print("MAE = {}".format(round(MAE, 2)))
+print("MAPE = {}".format(round(MAPE, 2)))
+
+# REGRESION LINEAL MULTIVARIADA
+columnas = ['tasa_crimen', 'lz', 'industrial', 'rio', 'nox', 'cuartos', 'edad', 'distancia', 'autopistas', 'impuestos', 'profesores', 'status']
+linear_multi_mod = LinearRegression().fit(df_train[columnas], df_train[['valor']])
+df_test[['predicted_linear_multi']] = pd.DataFrame(linear_multi_mod.predict(df_test[columnas]))
+plt.scatter(df_test[['valor']], df_test[['predicted_linear_multi']])
+plt.plot(df_test[['valor']], df_test[['valor']], color = 'red')
+plt.title("Precio real vs predicho de viviendas")
+plt.xlabel("Precio real ($)")
+plt.xlabel("Precio predicho ($)")
+plt.show()
+
+RMSE = mean_squared_error(df_test[['valor']], df_test[['predicted_linear_multi']], squared=False)
+MAE = mean_absolute_error(df_test[['valor']], df_test[['predicted_linear_multi']])
+MAPE = mean_absolute_percentage_error(df_test[['valor']], df_test[['predicted_linear_multi']])
+print("RMSE = {}".format(round(RMSE, 2)))
+print("MAE = {}".format(round(MAE, 2)))
+print("MAPE = {}".format(round(MAPE, 2)))
+
+#REGRESION LINEAL MULTIVARIADA CON TERMINO CUADRÁTICO
+columnas_sq = ['tasa_crimen', 'lz', 'industrial', 'rio', 'nox', 'cuartos', 'edad', 'distancia', 'autopistas', 'impuestos', 'profesores', 'status', 'status_sq']
+linear_multi_mod_sq = LinearRegression().fit(df_train[columnas_sq], df_train[['valor']])
+df_test[['predicted_linear_multi_sq']] = pd.DataFrame(linear_multi_mod_sq.predict(df_test[columnas_sq]))
+RMSE = mean_squared_error(df_test[['valor']], df_test[['predicted_linear_multi_sq']], squared=False)
+MAE = mean_absolute_error(df_test[['valor']], df_test[['predicted_linear_multi_sq']])
+MAPE = mean_absolute_percentage_error(df_test[['valor']], df_test[['predicted_linear_multi_sq']])
+print("RMSE = {}".format(round(RMSE, 2)))
+print("MAE = {}".format(round(MAE, 2)))
+print("MAPE = {}".format(round(MAPE, 2)))
